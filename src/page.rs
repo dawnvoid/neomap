@@ -1,6 +1,6 @@
-use url::{Url, ParseError};
-use reqwest::blocking;
 use regex::Regex;
+use reqwest::blocking;
+use url::{ParseError, Url};
 
 pub struct Page {
     pub url: Url,
@@ -10,7 +10,10 @@ pub struct Page {
 impl Page {
     pub fn new(url: Url) -> Option<Page> {
         assert!(!url.cannot_be_a_base());
-        Some(Page { url: url, html: String::new() })
+        Some(Page {
+            url: url,
+            html: String::new(),
+        })
     }
 
     pub fn fetch(&mut self) -> &str {
@@ -39,7 +42,7 @@ impl Page {
                 Err(ParseError::RelativeUrlWithoutBase) => match self.url.join(l) {
                     Ok(u) => u,
                     Err(e) => panic!("{e:?}"),
-                }
+                },
                 Err(e) => {
                     println!(r#"failed to parse url "{l}": {e:?}"#);
                     continue;

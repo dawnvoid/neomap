@@ -1,5 +1,5 @@
-use url::Url;
 use crate::page::Page;
+use url::Url;
 
 pub struct PageCrawler {
     url: Url,
@@ -12,7 +12,11 @@ impl PageCrawler {
         if url.cannot_be_a_base() {
             return Err(String::from("invalid url"));
         }
-        Ok(PageCrawler {url: url, links: Vec::new(), pages: Vec::new()})
+        Ok(PageCrawler {
+            url: url,
+            links: Vec::new(),
+            pages: Vec::new(),
+        })
     }
 
     pub fn crawl(&mut self) {
@@ -22,6 +26,8 @@ impl PageCrawler {
         /* perform bfs */
         while !frontier.is_empty() {
             let currenturl = frontier.pop().unwrap(); /* should never fail */
+
+            // println!("processing {}", currenturl.as_str());
 
             /* only process pages that we haven't processed before */
             /* slow but i don't care right now */
@@ -41,7 +47,7 @@ impl PageCrawler {
                 continue;
             }
 
-            println!("processing {}", currenturl.as_str());
+            // println!("processing {}", currenturl.as_str());
 
             self.pages.push(currenturl.clone());
 
@@ -62,7 +68,8 @@ pub fn is_url_html(url: &Url) -> bool {
     if path.ends_with(".html") || path.ends_with(".htm") {
         ok = true;
     }
-    if !path.contains(".") { /* not perfect but good enough for now */
+    if !path.contains(".") {
+        /* not perfect but good enough for now */
         ok = true;
     }
     ok

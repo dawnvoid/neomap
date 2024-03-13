@@ -1,3 +1,4 @@
+pub mod neocrawler;
 pub mod page;
 pub mod pagecrawler;
 
