@@ -87,6 +87,13 @@ impl Database {
         Ok(())
     }
 
+    pub fn delete_site_by_url(&self, site: SiteEntry) -> Result<(), String> {
+        self.connection
+            .execute("DELETE FROM site WHERE url = ?1", (site.url,))
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     pub fn get_site_with_oldest_crawltime(&self) -> Result<Option<SiteEntry>, String> {
         // see https://www.db-fiddle.com/f/kUoFMMUfYyNnrpnyWWvUXG/1
         let mut statement = self

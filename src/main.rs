@@ -45,10 +45,19 @@ fn main() {
         "https://kryptonaut.neocities.org/",
     );
 
-    db.delete_link_by_srcurl(
-        LinkEntry::new(
+    // db.delete_link_by_srcurl(
+    //     LinkEntry::new(
+    //         Url::parse("https://dawnvoid.neocities.org/").unwrap(),
+    //         Url::parse("https://example.org/").unwrap(),
+    //     )
+    //     .unwrap(),
+    // )
+    // .unwrap();
+
+    db.delete_site_by_url(
+        SiteEntry::new(
             Url::parse("https://dawnvoid.neocities.org/").unwrap(),
-            Url::parse("https://example.org/").unwrap(),
+            0,
         )
         .unwrap(),
     )
