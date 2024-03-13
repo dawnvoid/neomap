@@ -8,12 +8,41 @@ pub struct Database {
 }
 
 impl Database {
+    /// Connects to a sqlite database file.
+    /// If the file doesn't exist, it will be created.
+    /// If the tables don't exist, they will be created.
+    /// However, if the tables do exist, but have the wrong configuration,
+    /// they won't be fixed.
     pub fn connect(path: &Path) -> Result<Database, String> {
         // let con = Connection::open_in_memory()?;
         let con = Connection::open(path).map_err(|e| e.to_string())?;
         let d = Database { connection: con };
-        SiteEntry::create_table(&d.connection)?;
-        LinkEntry::create_table(&d.connection)?;
+
+        // create site table if needed
+        d.connection
+            .execute(
+                "CREATE TABLE IF NOT EXISTS site (
+                url TEXT NOT NULL PRIMARY KEY,
+                crawltime INTEGER NOT NULL
+            )",
+                (),
+            )
+            .map_err(|e| e.to_string())?;
+
+        // create link table if needed
+        d.connection
+            .execute(
+                "CREATE TABLE IF NOT EXISTS link (
+                srcurl TEXT NOT NULL,
+                dsturl TEXT NOT NULL,
+                PRIMARY KEY (srcurl, dsturl),
+                FOREIGN KEY (srcurl) REFERENCES site (url)
+                    ON UPDATE CASCADE
+                    ON DELETE CASCADE
+            )",
+                (),
+            )
+            .map_err(|e| e.to_string())?;
         Ok(d)
     }
 
@@ -27,6 +56,7 @@ impl Database {
         }
     }
 
+    /// Updates a site entry, or creates one if no site with the url exists.
     pub fn set_site(&self, site: SiteEntry) -> Result<(), String> {
         // site.insert_new(&self.connection)?;
         self.connection
@@ -39,8 +69,14 @@ impl Database {
         Ok(())
     }
 
-    pub fn insert_new_link(&self, link: LinkEntry) -> Result<(), String> {
-        link.insert_new(&self.connection)?;
+    /// Updates a link entry, or creates one if no link with the srcurl and dsturl exists.
+    pub fn set_link(&self, link: LinkEntry) -> Result<(), String> {
+        self.connection.execute(
+            "INSERT INTO link (srcurl, dsturl) VALUES (?1, ?2)
+            ON CONFLICT(srcurl, dsturl) DO UPDATE SET srcurl = excluded.srcurl, dsturl = excluded.dsturl",
+            (link.srcurl, link.dsturl),
+        )
+        .map_err(|e| e.to_string())?;
         Ok(())
     }
 
@@ -89,6 +125,13 @@ impl Database {
     // pub fn get_site_by_
 }
 
+/// A site entry in a `Database`.
+/// 
+/// `url` must be properly formatted.
+/// Ideally `SiteEntry::new()` should guarantee this.
+/// 
+/// `crawltime` is the unix timestamp of when the site was last crawled.
+/// Sites that haven't been crawled yet should set this to 0.
 #[derive(Debug)]
 pub struct SiteEntry {
     url: String, // primary key; base url of site (e.g. "https://kryptonaut.neocities.org/")
@@ -106,32 +149,14 @@ impl SiteEntry {
         };
         Ok(s)
     }
-
-    fn create_table(con: &Connection) -> Result<(), String> {
-        con.execute(
-            "CREATE TABLE IF NOT EXISTS site (
-                url TEXT NOT NULL PRIMARY KEY,
-                crawltime INTEGER NOT NULL
-            )",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        Ok(())
-    }
-
-    fn insert_new(self, con: &Connection) -> Result<(), String> {
-        con.execute(
-            "INSERT INTO site (url, crawltime) VALUES (?1, ?2)",
-            (self.url, self.crawltime),
-        )
-        .map_err(|e| e.to_string())?;
-        Ok(())
-    }
 }
 
+/// A link entry in a `Database`.
+/// 
+/// `srcurl` and `dsturl` must be properly formatted.
+/// Ideally, `LinkEntry::new()` should guarantee this.
 #[derive(Debug)]
 pub struct LinkEntry {
-    id: i64,        // primary key
     srcurl: String, // source site key (this is the site that has the link)
     dsturl: String, // destination site key
 }
@@ -145,35 +170,9 @@ impl LinkEntry {
             return Err(format!(r#"invalid destination url "{}""#, dsturl.as_ref()));
         }
         let l = LinkEntry {
-            id: 0,
             srcurl: String::from(srcurl.as_str()),
             dsturl: String::from(dsturl.as_str()),
         };
         Ok(l)
-    }
-
-    fn create_table(con: &Connection) -> Result<(), String> {
-        con.execute(
-            "CREATE TABLE IF NOT EXISTS link (
-                id     INTEGER PRIMARY KEY,
-                srcurl TEXT NOT NULL,
-                dsturl TEXT NOT NULL,
-                FOREIGN KEY (srcurl) REFERENCES site (url)
-                    ON UPDATE CASCADE
-                    ON DELETE CASCADE
-            )",
-            (),
-        )
-        .map_err(|e| e.to_string())?;
-        Ok(())
-    }
-
-    fn insert_new(self, con: &Connection) -> Result<(), String> {
-        con.execute(
-            "INSERT INTO link (srcurl, dsturl) VALUES (?1, ?2)",
-            (self.srcurl, self.dsturl),
-        )
-        .map_err(|e| e.to_string())?;
-        Ok(())
     }
 }

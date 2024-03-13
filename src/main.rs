@@ -14,7 +14,7 @@ fn add_link(db: &Database, srcurl: &str, dsturl: &str) {
     let src = Url::parse(srcurl).unwrap();
     let dst = Url::parse(dsturl).unwrap();
     let l = LinkEntry::new(src, dst).unwrap();
-    db.insert_new_link(l).unwrap();
+    db.set_link(l).unwrap();
 }
 
 fn main() {
@@ -54,29 +54,6 @@ fn main() {
     )
     .unwrap();
 
-    /*
-    let l = LinkEntry::new(
-        Url::parse("https://dawnvoid.neocities.org/").unwrap(),
-        Url::parse("https://errormine.neocities.org").unwrap(),
-    )
-    .unwrap();
-    db.insert_new_link(l).unwrap();
-
-    let l = LinkEntry::new(
-        Url::parse("https://dawnvoid.neocities.org/").unwrap(),
-        Url::parse("https://koyo.neocities.org").unwrap(),
-    )
-    .unwrap();
-    db.insert_new_link(l).unwrap();
-
-    let l = LinkEntry::new(
-        Url::parse("https://dawnvoid.neocities.org/").unwrap(),
-        Url::parse("https://undoified.neocities.org").unwrap(),
-    )
-    .unwrap();
-    db.insert_new_link(l).unwrap();
-    */
-
     let r = db.get_site_with_oldest_crawltime().unwrap().unwrap();
     println!("site with oldest crawltime: {r:?}");
 
@@ -91,59 +68,4 @@ fn main() {
     println!("site with oldest crawltime: {r:?}");
 
     db.disconnect().unwrap();
-
-    /*
-    let con = Connection::open_in_memory().unwrap();
-    con.execute(
-        "CREATE TABLE people (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            data BLOB NOT NULL
-        )",
-        (),
-    )
-    .unwrap();
-
-    con.execute(
-        "INSERT INTO people (name, data) VALUES (?1, ?2)",
-        ("what", Option::<Vec<u8>>::Some(vec![0, 1, 2, 3])),
-    )
-    .unwrap();
-    con.execute(
-        "INSERT INTO people (name, data) VALUES (?1, ?2)",
-        ("crazy", Option::<Vec<u8>>::Some(vec![0, 5, 6, 8, 10])),
-    )
-    .unwrap();
-    con.execute(
-        "INSERT INTO people (name, data) VALUES (?1, ?2)",
-        ("bruh", Option::<Vec<u8>>::Some(vec![0, 5, 6, 8, 10])),
-    )
-    .unwrap();
-
-    let mut statement = con.prepare("SELECT id, name, data FROM people").unwrap();
-    let result_iter = statement
-        .query_map((), |row| {
-            Ok(Person {
-                id: row.get(0).unwrap(),
-                name: row.get(1).unwrap(),
-                data: row.get(2).unwrap(),
-            })
-        })
-        .unwrap();
-
-    for r in result_iter {
-        println!("{r:?}");
-    }
-    */
-
-    println!("{}", Utc::now().timestamp());
 }
-
-/*
-#[derive(Debug)]
-struct Person {
-    id: i32,
-    name: String,
-    data: Option<Vec<u8>>,
-}
-*/
