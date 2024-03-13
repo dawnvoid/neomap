@@ -55,11 +55,7 @@ fn main() {
     // .unwrap();
 
     db.delete_site_by_url(
-        SiteEntry::new(
-            Url::parse("https://dawnvoid.neocities.org/").unwrap(),
-            0,
-        )
-        .unwrap(),
+        SiteEntry::new(Url::parse("https://dawnvoid.neocities.org/").unwrap(), 0).unwrap(),
     )
     .unwrap();
 
